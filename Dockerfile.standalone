@@ -1,0 +1,31 @@
+FROM alpine:latest AS build-env
+
+MAINTAINER Tsuyoshi Miyake <me@tsuyo.dev>
+
+ARG HADOOP_VERSION="3.2.0"
+ENV HADOOP_VERSION ${HADOOP_VERSION}
+
+WORKDIR /app
+RUN \
+  apk update && \
+  apk add jq
+
+RUN \
+  CLOSER_URL=`wget -q -O - 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred'` && \
+  wget -q -O - ${CLOSER_URL}/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
+  tar zxf - && \
+  mv hadoop-${HADOOP_VERSION}* hadoop
+
+
+FROM openjdk:8-jdk-slim
+COPY --from=build-env /app /app
+
+ENV HADOOP_HOME /app/hadoop
+ENV PATH ${PATH}:${HADOOP_HOME}/bin
+
+RUN \
+  apt-get -qq update && \
+  apt-get install -y procps net-tools ssh rsync && \
+  mkdir /workspace
+WORKDIR /workspace
+CMD ["bash"]

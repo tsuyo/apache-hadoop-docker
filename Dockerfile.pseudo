@@ -1,0 +1,51 @@
+FROM alpine:latest AS build-env
+
+MAINTAINER Tsuyoshi Miyake <me@tsuyo.dev>
+
+ARG HADOOP_VERSION="3.2.0"
+ENV HADOOP_VERSION ${HADOOP_VERSION}
+
+WORKDIR /app
+RUN \
+  apk update && \
+  apk add jq
+
+RUN \
+  CLOSER_URL=`wget -q -O - 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred'` && \
+  wget -q -O - ${CLOSER_URL}/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
+  tar zxf - && \
+  mv hadoop-${HADOOP_VERSION}* hadoop
+
+
+FROM openjdk:8-jdk-slim
+
+ENV HADOOP_HOME /app/hadoop
+ENV PATH ${PATH}:${HADOOP_HOME}/bin:${HADOOP_HOME}/sbin
+
+RUN \
+  groupadd hadoop && \
+  useradd -g hadoop -s /bin/bash -m hadoop && \
+  echo "PATH=$PATH" >> /home/hadoop/.bashrc
+COPY --chown=hadoop:hadoop --from=build-env /app /app
+
+RUN \
+  apt-get -qq update && \
+  apt-get install -y procps net-tools ssh rsync
+
+ADD etc/hadoop/core-site.xml ${HADOOP_HOME}/etc/hadoop
+ADD etc/hadoop/hdfs-site.xml ${HADOOP_HOME}/etc/hadoop
+ADD command/start-pseudo.sh /usr/sbin
+RUN \
+  chmod +x /usr/sbin/start-pseudo.sh && \
+  echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+  
+USER hadoop
+RUN \
+  ssh-keygen -t rsa -P '' -f ${HOME}/.ssh/id_rsa && \
+  cat ~/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys && \
+  chmod 0600 ${HOME}/.ssh/authorized_keys && \
+  hdfs namenode -format
+
+USER root
+WORKDIR /workspace
+CMD ["/usr/sbin/start-pseudo.sh"]
