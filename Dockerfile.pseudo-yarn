@@ -25,8 +25,7 @@ ENV START_SCRIPT start-apache-hadoop-pseudo-yarn.sh
 
 RUN \
   groupadd hadoop && \
-  useradd -g hadoop -s /bin/bash -m hadoop && \
-  echo "PATH=$PATH" >> /home/hadoop/.bashrc
+  useradd -g hadoop -s /bin/bash -m hadoop
 COPY --chown=hadoop:hadoop --from=build-env /app /app
 
 RUN \
@@ -40,13 +39,16 @@ ADD etc/hadoop/yarn-site.xml ${HADOOP_HOME}/etc/hadoop
 ADD command/${START_SCRIPT} /usr/sbin
 RUN \
   chmod +x /usr/sbin/${START_SCRIPT} && \
-  echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+  echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh && \
+  echo "PATH=$PATH" >> /home/hadoop/.bashrc && \
+  sed -i "s#\${HADOOP_HOME}#${HADOOP_HOME}#g" ${HADOOP_HOME}/etc/hadoop/mapred-site.xml
   
 USER hadoop
 RUN \
   ssh-keygen -t rsa -P '' -f ${HOME}/.ssh/id_rsa && \
-  cat ~/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys && \
+  cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys && \
   chmod 0600 ${HOME}/.ssh/authorized_keys && \
+  printf "Host *\n   StrictHostKeyChecking no\n   UserKnownHostsFile=/dev/null\n" >> ${HOME}/.ssh/config && \
   hdfs namenode -format
 
 USER root
