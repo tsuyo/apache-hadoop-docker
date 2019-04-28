@@ -12,7 +12,7 @@ RUN \
 
 RUN \
   CLOSER_URL=`wget -q -O - 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred'` && \
-  wget -q -O - ${CLOSER_URL}/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
+  wget -q -O - ${CLOSER_URL}/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
   tar zxf - && \
   mv hadoop-${HADOOP_VERSION}* hadoop
 

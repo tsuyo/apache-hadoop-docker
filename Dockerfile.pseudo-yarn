@@ -12,7 +12,7 @@ RUN \
 
 RUN \
   CLOSER_URL=`wget -q -O - 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred'` && \
-  wget -q -O - ${CLOSER_URL}/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
+  wget -q -O - ${CLOSER_URL}/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
   tar zxf - && \
   mv hadoop-${HADOOP_VERSION}* hadoop
 
@@ -21,6 +21,7 @@ FROM openjdk:8-jdk-slim
 
 ENV HADOOP_HOME /app/hadoop
 ENV PATH ${PATH}:${HADOOP_HOME}/bin:${HADOOP_HOME}/sbin
+ENV START_SCRIPT start-apache-hadoop-pseudo-yarn.sh
 
 RUN \
   groupadd hadoop && \
@@ -36,9 +37,9 @@ ADD etc/hadoop/core-site.xml ${HADOOP_HOME}/etc/hadoop
 ADD etc/hadoop/hdfs-site.xml ${HADOOP_HOME}/etc/hadoop
 ADD etc/hadoop/mapred-site.xml ${HADOOP_HOME}/etc/hadoop
 ADD etc/hadoop/yarn-site.xml ${HADOOP_HOME}/etc/hadoop
-ADD command/start-pseudo-yarn.sh /usr/sbin
+ADD command/${START_SCRIPT} /usr/sbin
 RUN \
-  chmod +x /usr/sbin/start-pseudo-yarn.sh && \
+  chmod +x /usr/sbin/${START_SCRIPT} && \
   echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
   
 USER hadoop
@@ -50,4 +51,4 @@ RUN \
 
 USER root
 WORKDIR /workspace
-CMD ["/usr/sbin/start-pseudo-yarn.sh"]
+CMD ["sh", "-c", "/usr/sbin/${START_SCRIPT} && tail -f /dev/null"]
