@@ -12,7 +12,7 @@ $ docker build --build-arg HADOOP_VERSION="3.2.0" \
 
 ## run
 ```
-$ docker run --rm -ti kirasoa/apache-hadoop-standalone:latest bash
+$ docker run --rm -ti kirasoa/apache-hadoop-standalone:latest -v ${PWD}:/workspace bash
 ```
 
 # [pseudo-distributed](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation)
@@ -27,7 +27,9 @@ $ docker build --build-arg HADOOP_VERSION="3.2.0" \
 
 ## run
 ```
-$ docker run --name apache-hadoop-pseudo --rm -d -p 9870:9870 -ti kirasoa/apache-hadoop-pseudo
+$ docker run --name apache-hadoop-pseudo --rm -d \
+-p 9870:9870 \
+-v ${PWD}:/workspace kirasoa/apache-hadoop-pseudo
 $ docker exec -ti apache-hadoop-pseudo bash
 root@7907e460ebac:/workspace# jps
 183 NameNode
@@ -53,9 +55,12 @@ $ docker build --build-arg HADOOP_VERSION="3.2.0" \
 -f Dockerfile.pseudo-yarn .
 ```
 
-## run (might need >= 4G memory for Docker Engine)
+## run
+You might need >= 4G memory for Docker Engine.
 ```
-$ docker run --name apache-hadoop-pseudo-yarn --rm -d -p 9870:9870 -p 8088:8088 -ti kirasoa/apache-hadoop-pseudo-yarn
+$ docker run --name apache-hadoop-pseudo-yarn --rm -d \
+-p 9870:9870 -p 8088:8088 \
+-v ${PWD}:/workspace kirasoa/apache-hadoop-pseudo-yarn
 $ docker exec -ti apache-hadoop-pseudo-yarn bash
 root@5074cf069efe:/workspace# jps
 1266 Jps
