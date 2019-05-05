@@ -30,7 +30,7 @@ COPY --chown=hadoop:hadoop --from=build-env /app /app
 
 RUN \
   apt-get -qq update && \
-  apt-get install -y procps net-tools ssh rsync
+  apt-get install -y procps net-tools lsof ssh rsync vim
 
 ADD etc/hadoop/core-site.xml ${HADOOP_HOME}/etc/hadoop
 ADD etc/hadoop/hdfs-site.xml ${HADOOP_HOME}/etc/hadoop

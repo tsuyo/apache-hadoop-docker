@@ -3,4 +3,9 @@
         <name>dfs.replication</name>
         <value>1</value>
     </property>
+    <!-- this is required for accessing from a remote host (e.g. access to a docker container) -->
+    <property>
+        <name>dfs.namenode.rpc-bind-host</name>
+        <value>0.0.0.0</value>
+    </property>
 </configuration>
